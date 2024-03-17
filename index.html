@@ -42,7 +42,7 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const collectionName = "users";
+        const collectionName = "links";
         const usersCol = collection(db, collectionName);
 
         async function firebaseAddDoc(doc) {
