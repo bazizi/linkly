@@ -1,0 +1,112 @@
+<html>
+
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <style type="text/css">
+        html,
+        body {
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body style="background-color: whitesmoke;">
+    <label for="url">Enter URL to shorten: </label>
+    <input id="url" />
+    <button id="shorten">Shorten!</button>
+    <div id="result"></div>
+    <script type="module">
+        function getUrlParameterByName(name, url = window.location.href) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getFirestore, collection, doc, getDocs, getDoc, addDoc } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js'
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1JIBAWSCTQfBTVNdmhtckjLR0KoLiil4",
+            authDomain: "linkly-c16ab.firebaseapp.com",
+            projectId: "linkly-c16ab",
+            storageBucket: "linkly-c16ab.appspot.com",
+            messagingSenderId: "604064460754",
+            appId: "1:604064460754:web:98049b4ba02041cc96620b"
+        };
+        const firebaseConfig = JSON.parse(decodeURIComponent(config));
+
+        initializeApp(firebaseConfig);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const collectionName = "users";
+        const usersCol = collection(db, collectionName);
+
+        async function firebaseAddDoc(doc) {
+            try {
+                const docRef = await addDoc(usersCol, doc);
+                console.log("Document written with ID: ", docRef.id);
+                return docRef.id;
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        }
+
+        export async function firebaseReadAllDocs() {
+            const users = await getDocs(usersCol);
+            const usersList = users.docs.map(doc => doc.data());
+            let result = [];
+            Object.entries(usersList).map(item => {
+                const [index, object] = item;
+                result.push({ 'name': object.name })
+            });
+            return result;
+        }
+
+        export async function firebaseReadDoc(docId) {
+            const docRef = doc(db, collectionName, docId)
+            const docSnap = await getDoc(docRef);
+            return docSnap.data();
+        }
+
+        window.firebaseReadAllDocs = firebaseReadAllDocs;
+        document.getElementById("shorten").onclick = async function () {
+            const result = document.getElementById("result");
+            const url = document.getElementById("url").value;
+            if (!url.startsWith("https://")) {
+                result.innerHTML = `Invalid URL. Only URLs starting with 'https://' are accepted`;
+                return;
+            }
+            const linkId = await firebaseAddDoc({ 'url': url });
+            const pageUrl = window.location.href;
+            const shortenedLink = `${pageUrl}?id=${linkId}`;
+            result.innerHTML = `Shortened URL: <a href="${shortenedLink}">${shortenedLink}</a>`;
+        }
+
+        async function redirectIfNeeded() {
+            const urlId = getUrlParameterByName('id');
+            if (!urlId) {
+                return;
+            }
+
+            const docSnap = await firebaseReadDoc(urlId);
+            if (!docSnap) {
+                return;
+            }
+
+            console.log(docSnap);
+            const result = document.getElementById("result");
+            result.innerHTML = `Shortened URL: ${docSnap}`;
+            window.location.href = docSnap.url;
+        }
+
+        redirectIfNeeded();
+
+    </script>
+</body>
+
+</html>
