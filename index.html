@@ -98,8 +98,8 @@
             }
 
             console.log(docSnap);
-            const result = document.getElementById("result");
-            result.innerHTML = `Shortened URL: ${docSnap}`;
+            const shortenedLink = docSnap.url;
+            document.body.innerHTML = `Redirecting: <a href="${shortenedLink}">${shortenedLink}</a>`;
             window.location.href = docSnap.url;
         }
 
